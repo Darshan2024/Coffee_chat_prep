@@ -1,10 +1,12 @@
 import asyncio
+import io
 import json
 import time
 import uuid
 from asyncio import Queue
 
-from fastapi import FastAPI, HTTPException
+import pdfplumber
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -20,28 +22,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory job store: job_id -> {"status", "messages": Queue, "result": PrepResponse | None, "error": str | None}
+# In-memory job store
 _jobs: dict[str, dict] = {}
 
 
 # ---------------------------------------------------------------------------
-# SSE helpers
+# Helpers
 # ---------------------------------------------------------------------------
 
 def _sse(data: dict) -> str:
     return f"data: {json.dumps(data)}\n\n"
 
 
-# ---------------------------------------------------------------------------
-# POST /prep  — async, returns job_id immediately
-# ---------------------------------------------------------------------------
+async def _pdf_to_text(upload: UploadFile) -> str:
+    pdf_bytes = await upload.read()
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+        return "\n".join(page.extract_text() or "" for page in pdf.pages)
 
-@app.post("/prep")
-async def prep_async(request: PrepRequest) -> dict:
-    """
-    Kick off the full pipeline in the background.
-    Returns a job_id to poll via GET /prep/stream/{job_id}.
-    """
+
+def _start_job(request: PrepRequest) -> tuple[str, Queue]:
     job_id = str(uuid.uuid4())
     queue: Queue = Queue()
     _jobs[job_id] = {"status": "processing", "messages": queue, "result": None, "error": None}
@@ -62,14 +61,60 @@ async def prep_async(request: PrepRequest) -> dict:
             _jobs[job_id]["error"] = str(exc)
             await queue.put({"status": "error", "message": str(exc)})
         finally:
-            await queue.put(None)  # sentinel to close stream
+            await queue.put(None)  # sentinel
 
     asyncio.create_task(_run())
+    return job_id, queue
+
+
+# ---------------------------------------------------------------------------
+# POST /prep  — multipart form (PDF upload path)
+# ---------------------------------------------------------------------------
+
+@app.post("/prep")
+async def prep_async(
+    person_name: str = Form(...),
+    company: str = Form(...),
+    linkedin_url: str = Form(None),
+    resume_file: UploadFile = File(None),
+    resume_text: str = Form(None),
+    job_description: str = Form(None),
+) -> dict:
+    """
+    Kick off the full pipeline in the background.
+    Accepts multipart form (PDF) or plain form (text fallback).
+    Returns { job_id } immediately.
+    """
+    if resume_file:
+        text = await _pdf_to_text(resume_file)
+    elif resume_text:
+        text = resume_text
+    else:
+        raise HTTPException(status_code=422, detail="resume_file or resume_text is required")
+
+    request = PrepRequest(
+        person_name=person_name,
+        company=company,
+        linkedin_url=linkedin_url or None,
+        resume_text=text,
+        job_description=job_description or None,
+    )
+    job_id, _ = _start_job(request)
     return {"job_id": job_id}
 
 
 # ---------------------------------------------------------------------------
-# GET /prep/stream/{job_id}  — SSE stream of progress + final result
+# POST /prep/json  — JSON body (kept for test scripts / curl)
+# ---------------------------------------------------------------------------
+
+@app.post("/prep/json")
+async def prep_async_json(request: PrepRequest) -> dict:
+    job_id, _ = _start_job(request)
+    return {"job_id": job_id}
+
+
+# ---------------------------------------------------------------------------
+# GET /prep/stream/{job_id}  — SSE stream
 # ---------------------------------------------------------------------------
 
 @app.get("/prep/stream/{job_id}")
@@ -81,7 +126,7 @@ async def prep_stream(job_id: str) -> StreamingResponse:
         queue: Queue = _jobs[job_id]["messages"]
         while True:
             msg = await queue.get()
-            if msg is None:  # sentinel — pipeline finished
+            if msg is None:
                 break
             yield _sse(msg)
 
@@ -93,15 +138,11 @@ async def prep_stream(job_id: str) -> StreamingResponse:
 
 
 # ---------------------------------------------------------------------------
-# POST /prep/sync  — blocking, returns PrepResponse directly (for testing)
+# POST /prep/sync  — blocking (test endpoint, JSON body)
 # ---------------------------------------------------------------------------
 
 @app.post("/prep/sync")
 async def prep_sync(request: PrepRequest) -> dict:
-    """
-    Run the full pipeline synchronously and return PrepResponse + metadata.
-    Use this endpoint for development and testing.
-    """
     from agents.orchestrator import run as orchestrator_run
 
     messages: list[str] = []
@@ -137,7 +178,7 @@ async def health() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# print_summary helper — used by the test script
+# print_summary helper — used by test scripts
 # ---------------------------------------------------------------------------
 
 def print_summary(result: PrepResponse, meta: dict) -> None:
@@ -161,19 +202,18 @@ def print_summary(result: PrepResponse, meta: dict) -> None:
     print(f"  Vibe:             {_head(result.person_research.vibe)}")
     print(f"  Connection pts:   {_head(str(result.person_research.connection_points))}")
 
-    print(f"\n[FIT Intro — {len(result.fit_intro.stages)} stages]")
+    print(f"\n[FIT Intro - {len(result.fit_intro.stages)} stages]")
     for s in result.fit_intro.stages:
         print(f"  Stage: {s.stage}")
         print(f"    Favorite:   {_head(s.favorite, 80)}")
         print(f"    Transition: {_head(s.transition, 80)}")
-    print(f"  Why {result.fit_intro.why_this_company[:60]}...")
 
     print(f"\n[Why This Company]")
     print(f"  Reason:     {_head(result.why_this_company.reason)}")
     print(f"  Evidence:   {_head(result.why_this_company.evidence)}")
     print(f"  Connection: {_head(result.why_this_company.connection)}")
 
-    print(f"\n[TIARA Questions — sample]")
+    print(f"\n[TIARA - sample]")
     for category, questions in [
         ("Trends",   result.tiara_questions.trends),
         ("Insights", result.tiara_questions.insights),
@@ -195,5 +235,5 @@ def print_summary(result: PrepResponse, meta: dict) -> None:
     print(f"  Total time:         {meta['elapsed_seconds']}s")
     print(f"\n  Progress log:")
     for msg in meta["progress_log"]:
-        print(f"    • {msg}")
+        print(f"    - {msg}")
     print()
