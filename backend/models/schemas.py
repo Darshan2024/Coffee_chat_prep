@@ -89,9 +89,9 @@ class PrepResponse(BaseModel):
     why_this_company: WhyThisCompany
     tiara_questions: TIARAQuestions
     call_structure: CallStructure
-    followup_messages: FollowUpMessages
-    skills_match_score: float | None
-    quality_score: float             # filled by evaluator
+    followup_messages: FollowUpMessages | None = None  # Claude occasionally omits — evaluator catches
+    skills_match_score: float | None = None
+    quality_score: float = 0.0                         # evaluator fills this
 
 
 class SectionScore(BaseModel):

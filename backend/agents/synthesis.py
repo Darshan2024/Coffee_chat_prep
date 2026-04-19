@@ -42,7 +42,10 @@ wrap-up (ask permission to follow up, not ask for referral)
 6. Follow-up messages must reference something SPECIFIC — \
 never generic "great talking to you"
 7. If skills match is provided, weave matched skills \
-naturally into FIT stages and Why This Company\
+naturally into FIT stages and Why This Company
+8. You MUST always generate the followup_messages section \
+with both thank_you and application_nudge fields. \
+These are required — never omit them.\
 """
 
 # ---------------------------------------------------------------------------
@@ -64,9 +67,7 @@ _TOOL = {
             "why_this_company",
             "tiara_questions",
             "call_structure",
-            "followup_messages",
-            "skills_match_score",
-            "quality_score",
+            "followup_messages",  # explicitly required — see system prompt rule 8
         ],
         "properties": {
             "company_research": {

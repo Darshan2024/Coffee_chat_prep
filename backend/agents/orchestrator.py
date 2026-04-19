@@ -47,6 +47,21 @@ async def run(request: PrepRequest, progress_callback: ProgressCallback) -> Prep
         request, research_brief, parsed_resume, skills_match
     )
 
+    # Safety: if followup_messages was omitted by Claude, rerun synthesis once
+    # with an explicit instruction to include it
+    if prep_response.followup_messages is None:
+        prep_response = await synthesis_agent.run(
+            request,
+            research_brief,
+            parsed_resume,
+            skills_match,
+            rerun_feedback=(
+                "CRITICAL: Your previous response was missing the followup_messages field. "
+                "You MUST include both thank_you and application_nudge. "
+                "Do not omit any required field."
+            ),
+        )
+
     # Pin skills_match_score from the actual SkillsMatchBrief — Claude
     # sometimes mis-encodes the percentage in its tool response (e.g. 90 vs 0.9)
     if skills_match:
