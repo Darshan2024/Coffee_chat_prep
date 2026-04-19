@@ -28,9 +28,67 @@ class ResearchBrief(BaseModel):
     talking_angles: list[str]
 
 
+class FITStage(BaseModel):
+    stage: str           # e.g. "CATS-Global Intern"
+    favorite: str        # favorite part of that role
+    insight: str         # what you learned
+    transition: str      # why you moved on / what drew you next
+
+
+class FITIntro(BaseModel):
+    stages: list[FITStage]
+    why_this_company: str  # final transition into this company
+
+
+class WhyThisCompany(BaseModel):
+    reason: str      # why drawn to the company
+    evidence: str    # from user's own experience
+    connection: str  # how it connects to what company is building
+
+
+class TIARAQuestions(BaseModel):
+    trends: list[str]       # 1-2 questions
+    insights: list[str]     # 1-2 questions
+    advice: list[str]       # 1-2 questions
+    resources: list[str]    # 1-2 questions
+    assignments: list[str]  # 1-2 questions
+
+
+class CallStructure(BaseModel):
+    small_talk: list[str]           # opening questions, energy tips
+    transition_phrase: str          # bridge from small talk to Q&A
+    active_listening_cues: list[str]
+    wrap_up: list[str]              # time check, gratitude, Ben Franklin ask
+
+
+class FollowUpMessages(BaseModel):
+    thank_you: str          # a few days later, references conversation
+    application_nudge: str  # when ready to apply
+
+
+class CompanyResearch(BaseModel):
+    what_they_do: str
+    current_momentum: str    # revenue, growth, recent news
+    future_initiatives: str  # AI investments, product launches
+    engineering_culture: str # tech stack, values, practices
+    key_challenges: list[str]
+
+
+class PersonResearch(BaseModel):
+    current_role: str
+    career_path: str
+    interests_and_focus: str
+    vibe: str                        # casual vs formal, chatty vs reserved
+    connection_points: list[str]     # overlaps with user's background
+
+
 class PrepResponse(BaseModel):
-    talking_points: list[str]
-    questions_to_ask: list[str]
-    followup_draft: str
+    company_research: CompanyResearch
+    person_research: PersonResearch
+    fit_intro: FITIntro
+    why_this_company: WhyThisCompany
+    tiara_questions: TIARAQuestions
+    call_structure: CallStructure
+    followup_messages: FollowUpMessages
     skills_match_score: float | None
-    quality_score: float
+    quality_score: float             # filled by evaluator

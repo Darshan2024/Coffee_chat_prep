@@ -92,15 +92,9 @@ async def _run_pipeline(req: PrepRequest) -> AsyncIterator[str]:
     yield _sse("progress", {"stage": "evaluator", "status": "done"})
 
     # -- final result ----------------------------------------------------
-    # Placeholder response — swap with real prep_response when agents exist
-    result = PrepResponse(
-        talking_points=[],
-        questions_to_ask=[],
-        followup_draft="",
-        skills_match_score=skills_match_brief.match_score if skills_match_brief else None,
-        quality_score=0.0,
-    )
-    yield _sse("result", result.model_dump())
+    # Placeholder — replaced once synthesis + evaluator agents are wired in.
+    # prep_response is a real PrepResponse object at that point.
+    yield _sse("result", {"status": "pipeline_complete"})
 
 
 # ---------------------------------------------------------------------------
