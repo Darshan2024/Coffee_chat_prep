@@ -94,13 +94,13 @@ export default function ResultsDashboard({ result, onStartOver }) {
   const [tiaraTab, setTiaraTab] = useState("Trends")
 
   const r = result
-  const tiaraCategories = {
+  const tiaraCategories = r.tiara_questions ? {
     Trends:      r.tiara_questions.trends,
     Insights:    r.tiara_questions.insights,
     Advice:      r.tiara_questions.advice,
     Resources:   r.tiara_questions.resources,
     Assignments: r.tiara_questions.assignments,
-  }
+  } : {}
 
   const scoreColor =
     r.quality_score >= 0.8
@@ -134,172 +134,182 @@ export default function ResultsDashboard({ result, onStartOver }) {
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
 
         {/* 1. Company Research */}
-        <section>
-          <SectionHeader icon="🏢" title="Company Research" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <InfoCard label="What They Do"       text={r.company_research.what_they_do}       copyId="wtd" copy={copy} copied={copied} />
-            <InfoCard label="Current Momentum"   text={r.company_research.current_momentum}   copyId="cm"  copy={copy} copied={copied} />
-            <InfoCard label="Future Initiatives" text={r.company_research.future_initiatives} copyId="fi"  copy={copy} copied={copied} />
-            <InfoCard label="Engineering Culture" text={r.company_research.engineering_culture} copyId="ec" copy={copy} copied={copied} />
-          </div>
-          <Card>
-            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Key Challenges</p>
-            <BulletList items={r.company_research.key_challenges} />
-          </Card>
-        </section>
+        {r.company_research && (
+          <section>
+            <SectionHeader icon="🏢" title="Company Research" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <InfoCard label="What They Do"        text={r.company_research.what_they_do}        copyId="wtd" copy={copy} copied={copied} />
+              <InfoCard label="Current Momentum"    text={r.company_research.current_momentum}    copyId="cm"  copy={copy} copied={copied} />
+              <InfoCard label="Future Initiatives"  text={r.company_research.future_initiatives}  copyId="fi"  copy={copy} copied={copied} />
+              <InfoCard label="Engineering Culture" text={r.company_research.engineering_culture} copyId="ec"  copy={copy} copied={copied} />
+            </div>
+            <Card>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Key Challenges</p>
+              <BulletList items={r.company_research.key_challenges} />
+            </Card>
+          </section>
+        )}
 
         {/* 2. Person Research */}
-        <section>
-          <SectionHeader icon="👤" title="Person Research" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <InfoCard label="Current Role"     text={r.person_research.current_role}        copyId="cr"  copy={copy} copied={copied} />
-            <InfoCard label="Career Path"      text={r.person_research.career_path}         copyId="cp"  copy={copy} copied={copied} />
-            <InfoCard label="Interests & Focus" text={r.person_research.interests_and_focus} copyId="if" copy={copy} copied={copied} className="sm:col-span-2" />
-          </div>
-          <Card className="mb-3">
-            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Vibe</p>
-            <p className="text-sm text-gray-700 leading-relaxed">{r.person_research.vibe}</p>
-          </Card>
-          <Card>
-            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Connection Points</p>
-            <BulletList items={r.person_research.connection_points} />
-          </Card>
-        </section>
+        {r.person_research && (
+          <section>
+            <SectionHeader icon="👤" title="Person Research" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <InfoCard label="Current Role"      text={r.person_research.current_role}        copyId="cr" copy={copy} copied={copied} />
+              <InfoCard label="Career Path"       text={r.person_research.career_path}         copyId="cp" copy={copy} copied={copied} />
+              <InfoCard label="Interests & Focus" text={r.person_research.interests_and_focus} copyId="if" copy={copy} copied={copied} className="sm:col-span-2" />
+            </div>
+            <Card className="mb-3">
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Vibe</p>
+              <p className="text-sm text-gray-700 leading-relaxed">{r.person_research.vibe}</p>
+            </Card>
+            <Card>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Connection Points</p>
+              <BulletList items={r.person_research.connection_points} />
+            </Card>
+          </section>
+        )}
 
         {/* 3. FIT Intro */}
-        <section>
-          <SectionHeader icon="🧵" title="FIT Intro" />
-          <div className="space-y-3 mb-4">
-            {r.fit_intro.stages.map((stage, i) => (
-              <Card key={i} className="border-l-4 border-l-indigo-400">
-                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-2">{stage.stage}</p>
-                <div className="space-y-2">
-                  {[
-                    { label: "Favorite", text: stage.favorite },
-                    { label: "Insight",  text: stage.insight },
-                    { label: "Transition", text: stage.transition },
-                  ].map(({ label, text }) => (
-                    <div key={label}>
-                      <span className="text-xs font-semibold text-gray-500">{label}: </span>
-                      <span className="text-sm text-gray-700">{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
-          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Why This Company</p>
-              <CopyBtn text={r.fit_intro.why_this_company} id="fitwtc" copy={copy} copied={copied} />
-            </div>
-            <p className="text-sm text-indigo-900 leading-relaxed">{r.fit_intro.why_this_company}</p>
-          </div>
-        </section>
-
-        {/* 4. Why This Company */}
-        <section>
-          <SectionHeader icon="💡" title="Why This Company" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { label: "Reason",     text: r.why_this_company.reason,     id: "wtr" },
-              { label: "Evidence",   text: r.why_this_company.evidence,   id: "wte" },
-              { label: "Connection", text: r.why_this_company.connection, id: "wtconn" },
-            ].map(({ label, text, id }) => (
-              <Card key={label}>
-                <div className="flex justify-between items-start mb-1">
-                  <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">{label}</p>
-                  <CopyBtn text={text} id={id} copy={copy} copied={copied} />
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* 5. TIARA Questions */}
-        <section>
-          <SectionHeader icon="❓" title="TIARA Questions" />
-          {/* Tabs */}
-          <div className="flex gap-1.5 mb-3 flex-wrap">
-            {Object.keys(tiaraCategories).map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setTiaraTab(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
-                  tiaraTab === cat
-                    ? TIARA_COLORS[cat] + " border"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-          <div className="space-y-2">
-            {tiaraCategories[tiaraTab].map((q, i) => (
-              <Card key={i}>
-                <div className="flex items-start gap-3">
-                  <span className={`px-2 py-0.5 rounded-md text-xs font-bold border shrink-0 ${TIARA_COLORS[tiaraTab]}`}>
-                    {tiaraTab[0]}
-                  </span>
-                  <div className="flex-1 flex items-start justify-between gap-2">
-                    <p className="text-sm text-gray-700 leading-relaxed">{q}</p>
-                    <CopyBtn text={q} id={`tiara-${tiaraTab}-${i}`} copy={copy} copied={copied} />
+        {r.fit_intro && (
+          <section>
+            <SectionHeader icon="🧵" title="FIT Intro" />
+            <div className="space-y-3 mb-4">
+              {r.fit_intro.stages.map((stage, i) => (
+                <Card key={i} className="border-l-4 border-l-indigo-400">
+                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-2">{stage.stage}</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Favorite",    text: stage.favorite },
+                      { label: "Insight",     text: stage.insight },
+                      { label: "Transition",  text: stage.transition },
+                    ].map(({ label, text }) => (
+                      <div key={label}>
+                        <span className="text-xs font-semibold text-gray-500">{label}: </span>
+                        <span className="text-sm text-gray-700">{text}</span>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* 6. Call Structure */}
-        <section>
-          <SectionHeader icon="📞" title="Call Structure" />
-          <div className="space-y-3">
-            <Card>
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Small Talk Openers</p>
-              <BulletList items={r.call_structure.small_talk} />
-            </Card>
-
+                </Card>
+              ))}
+            </div>
             <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
               <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Transition Phrase</p>
-                <CopyBtn text={r.call_structure.transition_phrase} id="trans" copy={copy} copied={copied} />
+                <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Why This Company</p>
+                <CopyBtn text={r.fit_intro.why_this_company} id="fitwtc" copy={copy} copied={copied} />
               </div>
-              <p className="text-sm text-indigo-900 italic">"{r.call_structure.transition_phrase}"</p>
+              <p className="text-sm text-indigo-900 leading-relaxed">{r.fit_intro.why_this_company}</p>
             </div>
+          </section>
+        )}
 
-            <Card>
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Active Listening Cues</p>
-              <BulletList items={r.call_structure.active_listening_cues} />
-            </Card>
+        {/* 4. Why This Company */}
+        {r.why_this_company && (
+          <section>
+            <SectionHeader icon="💡" title="Why This Company" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { label: "Reason",     text: r.why_this_company.reason,     id: "wtr" },
+                { label: "Evidence",   text: r.why_this_company.evidence,   id: "wte" },
+                { label: "Connection", text: r.why_this_company.connection, id: "wtconn" },
+              ].map(({ label, text, id }) => (
+                <Card key={label}>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">{label}</p>
+                    <CopyBtn text={text} id={id} copy={copy} copied={copied} />
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
-            <Card>
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Wrap-up</p>
-              <BulletList items={r.call_structure.wrap_up} />
-            </Card>
-          </div>
-        </section>
+        {/* 5. TIARA Questions */}
+        {r.tiara_questions && (
+          <section>
+            <SectionHeader icon="❓" title="TIARA Questions" />
+            <div className="flex gap-1.5 mb-3 flex-wrap">
+              {Object.keys(tiaraCategories).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setTiaraTab(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                    tiaraTab === cat
+                      ? TIARA_COLORS[cat] + " border"
+                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-2">
+              {(tiaraCategories[tiaraTab] ?? []).map((q, i) => (
+                <Card key={i}>
+                  <div className="flex items-start gap-3">
+                    <span className={`px-2 py-0.5 rounded-md text-xs font-bold border shrink-0 ${TIARA_COLORS[tiaraTab]}`}>
+                      {tiaraTab[0]}
+                    </span>
+                    <div className="flex-1 flex items-start justify-between gap-2">
+                      <p className="text-sm text-gray-700 leading-relaxed">{q}</p>
+                      <CopyBtn text={q} id={`tiara-${tiaraTab}-${i}`} copy={copy} copied={copied} />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 6. Call Structure */}
+        {r.call_structure && (
+          <section>
+            <SectionHeader icon="📞" title="Call Structure" />
+            <div className="space-y-3">
+              <Card>
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Small Talk Openers</p>
+                <BulletList items={r.call_structure.small_talk} />
+              </Card>
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Transition Phrase</p>
+                  <CopyBtn text={r.call_structure.transition_phrase} id="trans" copy={copy} copied={copied} />
+                </div>
+                <p className="text-sm text-indigo-900 italic">"{r.call_structure.transition_phrase}"</p>
+              </div>
+              <Card>
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Active Listening Cues</p>
+                <BulletList items={r.call_structure.active_listening_cues} />
+              </Card>
+              <Card>
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Wrap-up</p>
+                <BulletList items={r.call_structure.wrap_up} />
+              </Card>
+            </div>
+          </section>
+        )}
 
         {/* 7. Follow-up Messages */}
-        <section>
-          <SectionHeader icon="✉️" title="Follow-up Messages" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { label: "Thank You Message", text: r.followup_messages.thank_you,         id: "ty" },
-              { label: "Application Nudge", text: r.followup_messages.application_nudge, id: "an" },
-            ].map(({ label, text, id }) => (
-              <Card key={label}>
-                <div className="flex justify-between items-start mb-2">
-                  <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">{label}</p>
-                  <CopyBtn text={text} id={id} copy={copy} copied={copied} />
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{text}</p>
-              </Card>
-            ))}
-          </div>
-        </section>
+        {r.followup_messages && (
+          <section>
+            <SectionHeader icon="✉️" title="Follow-up Messages" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { label: "Thank You Message", text: r.followup_messages.thank_you,         id: "ty" },
+                { label: "Application Nudge", text: r.followup_messages.application_nudge, id: "an" },
+              ].map(({ label, text, id }) => (
+                <Card key={label}>
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">{label}</p>
+                    <CopyBtn text={text} id={id} copy={copy} copied={copied} />
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{text}</p>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 8. Metadata bar */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4 flex flex-wrap items-center justify-between gap-4">
