@@ -92,3 +92,20 @@ class PrepResponse(BaseModel):
     followup_messages: FollowUpMessages
     skills_match_score: float | None
     quality_score: float             # filled by evaluator
+
+
+class SectionScore(BaseModel):
+    score: float    # 0.0 to 1.0
+    feedback: str   # specific reason for the score
+    passed: bool    # score >= 0.7
+
+
+class EvaluationResult(BaseModel):
+    company_research_score: SectionScore
+    person_research_score: SectionScore
+    fit_intro_score: SectionScore
+    tiara_score: SectionScore
+    followup_score: SectionScore
+    overall_score: float   # average of all section scores
+    needs_rerun: bool      # True if overall_score < 0.7
+    rerun_feedback: str    # actionable instructions for synthesis agent
