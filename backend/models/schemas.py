@@ -83,15 +83,28 @@ class PersonResearch(BaseModel):
 
 
 class PrepResponse(BaseModel):
-    company_research: CompanyResearch
-    person_research: PersonResearch
-    fit_intro: FITIntro
-    why_this_company: WhyThisCompany
-    tiara_questions: TIARAQuestions
-    call_structure: CallStructure
-    followup_messages: FollowUpMessages | None = None  # Claude occasionally omits — evaluator catches
+    # All nested sections are optional — Claude occasionally drops one.
+    # The orchestrator validates completeness and retries if any are None.
+    company_research: CompanyResearch | None = None
+    person_research: PersonResearch | None = None
+    fit_intro: FITIntro | None = None
+    why_this_company: WhyThisCompany | None = None
+    tiara_questions: TIARAQuestions | None = None
+    call_structure: CallStructure | None = None
+    followup_messages: FollowUpMessages | None = None
     skills_match_score: float | None = None
     quality_score: float = 0.0                         # evaluator fills this
+
+    def missing_sections(self) -> list[str]:
+        """Return names of any sections Claude failed to populate."""
+        return [
+            f for f in [
+                "company_research", "person_research", "fit_intro",
+                "why_this_company", "tiara_questions", "call_structure",
+                "followup_messages",
+            ]
+            if getattr(self, f) is None
+        ]
 
 
 class SectionScore(BaseModel):

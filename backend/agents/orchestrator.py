@@ -47,18 +47,18 @@ async def run(request: PrepRequest, progress_callback: ProgressCallback) -> Prep
         request, research_brief, parsed_resume, skills_match
     )
 
-    # Safety: if followup_messages was omitted by Claude, rerun synthesis once
-    # with an explicit instruction to include it
-    if prep_response.followup_messages is None:
+    # Safety: if Claude dropped any section, rerun once with explicit names
+    missing = prep_response.missing_sections()
+    if missing:
         prep_response = await synthesis_agent.run(
             request,
             research_brief,
             parsed_resume,
             skills_match,
             rerun_feedback=(
-                "CRITICAL: Your previous response was missing the followup_messages field. "
-                "You MUST include both thank_you and application_nudge. "
-                "Do not omit any required field."
+                f"CRITICAL: Your previous response was missing these required sections: "
+                f"{', '.join(missing)}. Every section in the tool schema is mandatory. "
+                f"Do not omit any field — return all sections completely."
             ),
         )
 

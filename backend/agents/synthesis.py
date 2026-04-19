@@ -43,9 +43,10 @@ wrap-up (ask permission to follow up, not ask for referral)
 never generic "great talking to you"
 7. If skills match is provided, weave matched skills \
 naturally into FIT stages and Why This Company
-8. You MUST always generate the followup_messages section \
-with both thank_you and application_nudge fields. \
-These are required — never omit them.\
+8. You MUST populate ALL sections — company_research, person_research, \
+fit_intro, why_this_company, tiara_questions, call_structure, AND \
+followup_messages (with thank_you and application_nudge). \
+Omitting any section causes a pipeline failure.\
 """
 
 # ---------------------------------------------------------------------------
