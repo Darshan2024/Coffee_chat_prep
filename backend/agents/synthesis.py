@@ -165,10 +165,12 @@ async def run(
     research_brief: ResearchBrief,
     parsed_resume: ParsedResume,
     skills_match: SkillsMatchBrief | None,
+    rerun_feedback: str | None = None,
 ) -> PrepResponse:
     """
     Synthesize all research and resume data into a full PrepResponse
     using the FIT method and TIARA framework via Claude tool-calling.
+    Pass rerun_feedback on a second attempt to address evaluator critique.
     """
     # Build skills section only when JD was provided
     if skills_match:
@@ -179,6 +181,16 @@ async def run(
         )
     else:
         skills_section = "(No job description provided — skip skills match references)"
+
+    # Inject evaluator critique on reruns so Claude knows exactly what to fix
+    rerun_section = ""
+    if rerun_feedback:
+        rerun_section = (
+            f"\n\nREVISION REQUIRED — EVALUATOR FEEDBACK:\n"
+            f"{rerun_feedback}\n"
+            f"Fix every issue above. Be more specific. "
+            f"Reference actual names, dates, products, and initiatives."
+        )
 
     user_message = f"""\
 MEETING INFO:
@@ -198,7 +210,7 @@ Experience:
 Projects:
 {chr(10).join(f'- {p}' for p in parsed_resume.relevant_projects)}
 
-{skills_section}
+{skills_section}{rerun_section}
 
 Generate the full coffee chat prep guide following the FIT method and TIARA \
 framework exactly as specified. Write in first person as if I am going into \
@@ -223,4 +235,15 @@ this meeting.\
 
     # Extract the tool call arguments — tool_choice forces exactly one call
     tool_block = next(b for b in response.content if b.type == "tool_use")
-    return PrepResponse(**tool_block.input)
+    raw = tool_block.input
+
+    # Claude occasionally serializes nested objects as JSON strings — parse them back
+    _nested = [
+        "company_research", "person_research", "fit_intro",
+        "why_this_company", "tiara_questions", "call_structure", "followup_messages",
+    ]
+    for field in _nested:
+        if isinstance(raw.get(field), str):
+            raw[field] = json.loads(raw[field])
+
+    return PrepResponse(**raw)
