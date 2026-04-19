@@ -123,7 +123,7 @@ _TOOL = {
             },
             "overall_score":   {"type": "number"},
             "needs_rerun":     {"type": "boolean"},
-            "rerun_feedback":  {"type": "string"},
+            "rerun_feedback":  {"type": "string", "description": "Required when needs_rerun is true — specific actionable instructions for the synthesis agent."},
         },
     },
 }
@@ -158,7 +158,7 @@ Company Research: {prep_response.company_research.model_dump_json(indent=2)}
 Person Research: {prep_response.person_research.model_dump_json(indent=2)}
 FIT Intro: {prep_response.fit_intro.model_dump_json(indent=2)}
 TIARA Questions: {prep_response.tiara_questions.model_dump_json(indent=2)}
-Follow-up Messages: {prep_response.followup_messages.model_dump_json(indent=2)}
+Follow-up Messages: {prep_response.followup_messages.model_dump_json(indent=2) if prep_response.followup_messages else "(missing)"}
 
 Evaluate each section strictly. Flag any statement that could apply to a \
 company or person other than {request.person_name} at {request.company}.\
@@ -183,15 +183,18 @@ company or person other than {request.person_name} at {request.company}.\
     tool_block = next(b for b in response.content if b.type == "tool_use")
     evaluation = EvaluationResult(**tool_block.input)
 
+    # If Claude said needs_rerun but forgot rerun_feedback, supply a generic instruction
+    if evaluation.needs_rerun and not evaluation.rerun_feedback.strip():
+        evaluation = evaluation.model_copy(update={
+            "rerun_feedback": "Output was too generic. Add more specific details referencing actual company initiatives, person background, and candidate's real experience."
+        })
+
     # Force needs_rerun=False if we've already rerun once (max one rerun)
     if rerun_count >= 1 and evaluation.needs_rerun:
-        evaluation = EvaluationResult(
-            **{
-                **evaluation.model_dump(),
-                "needs_rerun": False,
-                "rerun_feedback": evaluation.rerun_feedback + " [Rerun limit reached — returning as-is]",
-            }
-        )
+        evaluation = evaluation.model_copy(update={
+            "needs_rerun": False,
+            "rerun_feedback": evaluation.rerun_feedback + " [Rerun limit reached — returning as-is]",
+        })
 
     # Write quality score back into the PrepResponse
     prep_response = PrepResponse(

@@ -119,6 +119,6 @@ class EvaluationResult(BaseModel):
     fit_intro_score: SectionScore
     tiara_score: SectionScore
     followup_score: SectionScore
-    overall_score: float   # average of all section scores
-    needs_rerun: bool      # True if overall_score < 0.7
-    rerun_feedback: str    # actionable instructions for synthesis agent
+    overall_score: float = 0.0
+    needs_rerun: bool = False
+    rerun_feedback: str = ""   # Claude occasionally omits this even when needs_rerun=True
