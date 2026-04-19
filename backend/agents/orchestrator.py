@@ -46,6 +46,14 @@ async def run(request: PrepRequest, progress_callback: ProgressCallback) -> Prep
     prep_response = await synthesis_agent.run(
         request, research_brief, parsed_resume, skills_match
     )
+
+    # Pin skills_match_score from the actual SkillsMatchBrief — Claude
+    # sometimes mis-encodes the percentage in its tool response (e.g. 90 vs 0.9)
+    if skills_match:
+        prep_response = prep_response.model_copy(
+            update={"skills_match_score": skills_match.match_score}
+        )
+
     await progress_callback("Generated your personalized prep guide...")
 
     # ------------------------------------------------------------------
