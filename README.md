@@ -82,6 +82,22 @@ npm run dev
 5. Hit **Generate my prep guide** — the pipeline takes ~2 minutes
 6. Browse your personalized results, copy any section with one click
 
+## Screenshots
+
+**1. Fill in who you're meeting**
+
+![Input form](screenshots/01-input-form.png)
+
+**2. Watch the pipeline run live** — SSE progress updates as each agent finishes, with rotating facts and framework insights while you wait
+
+| Researching | Parsing + facts | Synthesizing + insights |
+|---|---|---|
+| ![Progress: researching](screenshots/02-progress-researching.png) | ![Progress: facts card](screenshots/03-progress-facts.png) | ![Progress: framework insight](screenshots/04-progress-insight.png) |
+
+**3. Get your personalized guide** — company + person research, FIT intro, Why This Company, TIARA questions, call structure, and follow-up messages, each with a copy button, plus quality/skills-match scores at the bottom
+
+![Results dashboard](screenshots/05-results-dashboard.png)
+
 ## Pipeline flow
 
 ```
