@@ -4,9 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Coffee Chat Prep — FIT + TIARA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { font-family: 'Inter', sans-serif; }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .anim-hero   { animation: fadeUp 0.45s ease both; animation-delay: 0.1s; }
+      .anim-cards  { animation: fadeUp 0.45s ease both; animation-delay: 0.25s; }
+      .anim-form   { animation: fadeUp 0.45s ease both; animation-delay: 0.4s; }
+      .anim-what   { animation: fadeUp 0.45s ease both; animation-delay: 0.55s; }
+    </style>
   </head>
-  <body>
+  <body style="background:#F8F9FA; margin:0;">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

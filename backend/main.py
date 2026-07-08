@@ -9,7 +9,9 @@ import pdfplumber
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
+from config import anthropic_client
 from models.schemas import PrepRequest, PrepResponse
 from utils.cost_logger import get_session_cost
 
@@ -166,6 +168,57 @@ async def prep_sync(request: PrepRequest) -> dict:
             "progress_log": messages,
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# POST /generate-facts  — fast Haiku endpoint for loading screen facts
+# ---------------------------------------------------------------------------
+
+class FactCard(BaseModel):
+    type: str       # "stat" | "quote" | "insight" | "tip"
+    headline: str
+    body: str
+    source: str
+
+
+class FactsRequest(BaseModel):
+    person_name: str
+    company: str
+
+
+@app.post("/generate-facts")
+async def generate_facts(req: FactsRequest) -> dict:
+    prompt = f"""Generate 6 varied networking insights for someone preparing for a coffee chat with {req.person_name} at {req.company}.
+
+Base these on the methodology from "The Two Hour Job Search" by Steve Dalton, specifically the FIT method and TIARA framework.
+
+Requirements:
+- Mix of: hard statistics, memorable quotes, practical insights, and actionable tips
+- Each should feel fresh and non-generic
+- Vary the framing — some sobering stats, some encouraging insights, some tactical tips
+- Where relevant, connect the insight to {req.company} specifically
+- Keep body to 1-2 punchy sentences max
+- Headlines should be 4-6 words, punchy
+- Types: use "stat" for numbers, "quote" for attributed statements, "insight" for framework explanations, "tip" for actionable advice
+- source should be "The Two Hour Job Search" or "Steve Dalton"
+
+Return ONLY a valid JSON array of exactly 6 objects. Each object must have: type, headline, body, source.
+No markdown, no explanation, just the JSON array."""
+
+    response = await anthropic_client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    raw = response.content[0].text.strip()
+    # Strip markdown code fences if Claude includes them
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    facts = json.loads(raw.strip())
+    return {"facts": facts}
 
 
 # ---------------------------------------------------------------------------
