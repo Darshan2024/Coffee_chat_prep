@@ -239,13 +239,18 @@ this meeting.\
     tool_block = next(b for b in response.content if b.type == "tool_use")
     raw = tool_block.input
 
-    # Claude occasionally serializes nested objects as JSON strings — parse them back
+    # Claude occasionally serializes nested objects as JSON strings — parse them back.
+    # If the string isn't valid JSON, drop the field so missing_sections() catches
+    # it and the orchestrator reruns synthesis instead of crashing the request.
     _nested = [
         "company_research", "person_research", "fit_intro",
         "why_this_company", "tiara_questions", "call_structure", "followup_messages",
     ]
     for field in _nested:
         if isinstance(raw.get(field), str):
-            raw[field] = json.loads(raw[field])
+            try:
+                raw[field] = json.loads(raw[field])
+            except json.JSONDecodeError:
+                raw[field] = None
 
     return PrepResponse(**raw)

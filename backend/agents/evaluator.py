@@ -154,10 +154,10 @@ Recent news: {chr(10).join(f'- {n}' for n in research_brief.recent_news)}
 Talking angles: {chr(10).join(f'- {a}' for a in research_brief.talking_angles)}
 
 PREP RESPONSE TO EVALUATE:
-Company Research: {prep_response.company_research.model_dump_json(indent=2)}
-Person Research: {prep_response.person_research.model_dump_json(indent=2)}
-FIT Intro: {prep_response.fit_intro.model_dump_json(indent=2)}
-TIARA Questions: {prep_response.tiara_questions.model_dump_json(indent=2)}
+Company Research: {prep_response.company_research.model_dump_json(indent=2) if prep_response.company_research else "(missing)"}
+Person Research: {prep_response.person_research.model_dump_json(indent=2) if prep_response.person_research else "(missing)"}
+FIT Intro: {prep_response.fit_intro.model_dump_json(indent=2) if prep_response.fit_intro else "(missing)"}
+TIARA Questions: {prep_response.tiara_questions.model_dump_json(indent=2) if prep_response.tiara_questions else "(missing)"}
 Follow-up Messages: {prep_response.followup_messages.model_dump_json(indent=2) if prep_response.followup_messages else "(missing)"}
 
 Evaluate each section strictly. Flag any statement that could apply to a \
